@@ -1,0 +1,32 @@
+---
+title: "Example_map"
+author: "LM"
+date: "10/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+#make plot
+ggplot() +   
+ 
+   theme_void() +   #gives your map a blank background
+  
+#summarize data, specify aestetics. x and y are probably going to be lat/long. z is whatever variable you want summarized. binwidth is how big you want the data aggregation
+  stat_summary_hex(data=data, aes(y=START_LAT, x=START_LON, z = HAIL_AMOUNT_LB),binwidth = c(0.16666,0.16666),alpha=1) + 
+  
+ 
+  geom_polygon(data = NEUS, aes(x=long, y = lat, group = group), fill = "darkgreen",  color="black",inherit.aes = FALSE)  +
+  ggtitle("Where are plaice caught? Study Fleet 2010-2020") +
+  scale_fill_viridis(
+      trans = "log",
+      breaks = c(1, 10, 100, 1000),
+      name = "Catch (lbs)" ) +
+  geom_sf(data = areas, color = "black", size = 0.5, alpha =0) +
+  coord_sf(ylim = c(40, 44),  xlim = c(-74, -67))
+```
+
