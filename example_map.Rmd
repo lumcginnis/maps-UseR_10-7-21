@@ -9,24 +9,69 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r Load packages}
+library(tidyverse) # always (includes ggplot2)
+library(readr) # read in datasets
+library(maps) # a package full of data. This is where I will pull land masses from
+library(sf) # simple features. A great package for handling spatial data
+```
+
+```{r}
+#Data
+
+
+# land mass
+states <- map_data("state")
+NEUS <- subset(states, region %in% c("Maine", "massachusetts", "new hampshire", "vermont", "maine", "rhode island",
+                "connecticut","new york","new jersey","delaware","pennsylvania",
+                            "maryland","virginia","north carolina","west virginia"))
+
+# statistical areas
+#from https://www.fisheries.noaa.gov/resources/maps
+#more datasets here: ftp://ftp.nefsc.noaa.gov/pub/gis/ (doesn't open in Chrome)  
+areas <- st_read(dsn = "./Statistical_Areas_2010_withNames") %>%
+  st_set_crs(4269)
+areas <- areas %>% filter(Id %in% c("464", "465", "511", "512", "513", "514", "515", "521", "522", "525", "526", "537", "538", "539", "551", "561", "562", "611", "612", "613"))  
+centroids <- sf::st_coordinates(st_centroid(areas)) 
+areas <- cbind(areas, centroids)
+
+#NEFSC Bottom Trawl Survey https://oceanadapt.rutgers.edu/
+survey <- read.csv("./NEFSC_bottom_trawl_data.csv") %>%
+ 
+# I'm just making some subsets here for simplicity, instead of dealing with the whole dataset
+cod <- survey %>% filter(Species == "Gadus morhua")
+sandlance <- survey %>% filter(Species == "Ammodytes dubius")
+herring <- survey %>% filter(Species == "Clupea harengus")
+somefish <- filter(survey, Species %in% c("Gadus morhua", "Ammodytes dubius", "Clupea harengus"))
+
+
+```
+
+
 ```{r}
 
 #make plot
 ggplot() +   
  
-   theme_void() +   #gives your map a blank background
+#give your map a blank background
+   theme_void() +  
   
-#summarize data, specify aestetics. x and y are probably going to be lat/long. z is whatever variable you want summarized. binwidth is how big you want the data aggregation
-  stat_summary_hex(data=data, aes(y=START_LAT, x=START_LON, z = HAIL_AMOUNT_LB),binwidth = c(0.16666,0.16666),alpha=1) + 
+# plot data as points
+ geom_point(data = somefish, aes(y = Latitude, x = Longitude, colour = Species)) +
   
- 
+ #add land mass
   geom_polygon(data = NEUS, aes(x=long, y = lat, group = group), fill = "darkgreen",  color="black",inherit.aes = FALSE)  +
-  ggtitle("Where are plaice caught? Study Fleet 2010-2020") +
-  scale_fill_viridis(
-      trans = "log",
-      breaks = c(1, 10, 100, 1000),
-      name = "Catch (lbs)" ) +
-  geom_sf(data = areas, color = "black", size = 0.5, alpha =0) +
+  
+  #add statistical area lines
+   geom_sf(data = areas, color = "black", size = 0.5, alpha =0) +
+  
+  # label statistical areas
+   geom_text(data = areas, aes(x= X, y = Y, label = Id, face = "bold"), color = "white", fontface = "bold", size = 2) +
+  
+# title your plot  
+  ggtitle("Mapping the NEFSC Bottom Trawl Survey") +
+
+ # crop your map
   coord_sf(ylim = c(40, 44),  xlim = c(-74, -67))
 ```
 
