@@ -36,7 +36,7 @@ centroids <- sf::st_coordinates(st_centroid(areas))
 areas <- cbind(areas, centroids)
 
 #NEFSC Bottom Trawl Survey https://oceanadapt.rutgers.edu/
-survey <- read.csv("./NEFSC_bottom_trawl_data.csv") %>%
+survey <- read.csv("./NEFSC_bottom_trawl_data.csv")
  
 # I'm just making some subsets here for simplicity, instead of dealing with the whole dataset
 cod <- survey %>% filter(Species == "Gadus morhua")
@@ -54,7 +54,7 @@ somefish <- filter(survey, Species %in% c("Gadus morhua", "Ammodytes dubius", "C
 ggplot() +   
  
 #give your map a blank background
-   theme_void() +  
+   theme_classic() +  
   
 # plot data as points
  geom_point(data = somefish, aes(y = Latitude, x = Longitude, colour = Species)) +
@@ -66,7 +66,7 @@ ggplot() +
    geom_sf(data = areas, color = "black", size = 0.5, alpha =0) +
   
   # label statistical areas
-   geom_text(data = areas, aes(x= X, y = Y, label = Id, face = "bold"), color = "white", fontface = "bold", size = 2) +
+   geom_text(data = areas, aes(x = X, y = Y, label = Id, face = "bold"), color = "white", size = 2) +
   
 # title your plot  
   ggtitle("Mapping the NEFSC Bottom Trawl Survey") +
