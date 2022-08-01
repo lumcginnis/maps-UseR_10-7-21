@@ -9,6 +9,22 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Some very helpful resources for learning how to put these things together:
+
+Geocomputation with R by Robin Lovelace https://bookdown.org/robinlovelace/geocompr/
+
+sf Cheat Sheet https://github.com/rstudio/cheatsheets/blob/master/sf.pdf 
+
+Sean Hardison's sf workshop https://github.com/seanhardison1/sf-workshop 
+ 
+ggplot2 from the masters themselves
+https://ggplot2-book.org/index.html 
+
+The R Graph Gallery
+https://www.r-graph-gallery.com/index.html 
+
+
+
 ```{r Load packages}
 library(tidyverse) # always (includes ggplot2)
 library(readr) # read in datasets
@@ -20,21 +36,30 @@ library(sf) # simple features. A great package for handling spatial data
 #Data
 
 
-# land mass
+# Extract land mass from maps package
 states <- map_data("state")
 NEUS <- subset(states, region %in% c("Maine", "massachusetts", "new hampshire", "vermont", "maine", "rhode island",
                 "connecticut","new york","new jersey","delaware","pennsylvania",
                             "maryland","virginia","north carolina","west virginia"))
+```
 
+```{r}
 # statistical areas
+
 #from https://www.fisheries.noaa.gov/resources/maps
 #more datasets here: ftp://ftp.nefsc.noaa.gov/pub/gis/ (doesn't open in Chrome)  
 areas <- st_read(dsn = "./Statistical_Areas_2010_withNames") %>%
-  st_set_crs(4269)
+  st_set_crs(4269) # set coordinate reference system
+
+#choosing the statistical areas in our region
 areas <- areas %>% filter(Id %in% c("464", "465", "511", "512", "513", "514", "515", "521", "522", "525", "526", "537", "538", "539", "551", "561", "562", "611", "612", "613"))  
+
+#finding the center of each of those statistical area polygons so we can put a label there later
 centroids <- sf::st_coordinates(st_centroid(areas)) 
 areas <- cbind(areas, centroids)
+```
 
+```{r}
 #NEFSC Bottom Trawl Survey https://oceanadapt.rutgers.edu/
 survey <- read.csv("./NEFSC_bottom_trawl_data.csv")
  
@@ -53,7 +78,7 @@ somefish <- filter(survey, Species %in% c("Gadus morhua", "Ammodytes dubius", "C
 #make plot
 ggplot() +   
  
-#give your map a blank background
+#get rid of the grid lines, but keep the lat/long markers
    theme_classic() +  
   
 # plot data as points
@@ -62,7 +87,7 @@ ggplot() +
  #add land mass
   geom_polygon(data = NEUS, aes(x=long, y = lat, group = group), fill = "darkgreen",  color="black",inherit.aes = FALSE)  +
   
-  #add statistical area lines
+  #add statistical area outlines
    geom_sf(data = areas, color = "black", size = 0.5, alpha =0) +
   
   # label statistical areas
